@@ -1,0 +1,23 @@
+# Private generator/update scripts
+generate-openrouter-models-page.js
+compare-update.js
+compare-updaate.js
+update-openrouter-models.sh
+
+# Private source DB / API snapshots
+models.json
+data.json
+updated*.json
+
+# Private template / working files
+index.template.html
+
+# Logs / temp / backups
+logs/
+*.log
+tmp/
+.temp/
+backups/
+*.bak
+*.backup
+.DS_Store

@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenRouter Models</title>
+  <script src="model.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .sort-icon { display: inline-block; min-width: 1em; }
+    .model-grid {
+      display: grid;
+      grid-template-columns: 48px minmax(320px, 2.8fr) minmax(230px, 1.6fr) 108px 108px 92px 86px 90px 88px 74px;
+      gap: 0;
+      align-items: stretch;
+    }
+    @media (max-width: 1180px) {
+      .model-grid { grid-template-columns: 48px 320px 230px 108px 108px 92px 86px 90px 88px 74px; }
+    }
+    .cell {
+      padding: 0.85rem 0.9rem;
+      border-right: 1px solid #e2e8f0;
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+    }
+    .model-grid > .cell:nth-child(6),
+    .model-grid > .cell:nth-child(7),
+    .model-grid > .cell:nth-child(8),
+    .model-grid > .cell:nth-child(9),
+    .model-grid > .cell:nth-child(10) {
+      padding-left: 0.48rem;
+      padding-right: 0.48rem;
+      justify-content: flex-end;
+      text-align: right;
+    }
+    .model-grid > .header-cell:nth-child(6),
+    .model-grid > .header-cell:nth-child(7),
+    .model-grid > .header-cell:nth-child(8),
+    .model-grid > .header-cell:nth-child(9),
+    .model-grid > .header-cell:nth-child(10) {
+      justify-content: flex-start;
+      text-align: left;
+      font-size: 0.72rem;
+      line-height: 1.05rem;
+      white-space: normal;
+    }
+    .sort-active {
+      background: #e0f2fe !important;
+      box-shadow: inset 0 0 0 9999px rgba(14, 165, 233, 0.04);
+    }
+    .sort-active.header-cell {
+      background: #bae6fd !important;
+      color: #075985;
+    }
+    .cell:last-child { border-right: 0; }
+    .header-cell {
+      min-height: 66px;
+      align-items: center;
+      white-space: nowrap;
+      font-weight: 650;
+    }
+    .check-cell {
+      justify-content: center;
+      padding-left: 0.55rem;
+      padding-right: 0.55rem;
+    }
+    .row-button {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+    }
+    .details-pre { white-space: pre-wrap; overflow-x: auto; }
+    .model-description {
+      display: block;
+      margin-top: 0.4rem;
+      color: #475569;
+      font-size: 0.82rem;
+      line-height: 1.42;
+      max-width: 62rem;
+    }
+    .profile-label {
+      display: block;
+      margin-top: 0.35rem;
+      color: #64748b;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.72rem;
+      line-height: 1.2;
+      word-break: break-all;
+    }
+    .id-header-label {
+      display: block;
+      color: #1d4ed8;
+      font-weight: 700;
+      line-height: 1.05rem;
+    }
+    .profile-header-label {
+      display: block;
+      margin-top: 0.2rem;
+      color: #64748b;
+      font-size: 0.72rem;
+      line-height: 1rem;
+      font-weight: 600;
+    }
+    .search-wrap { position: relative; }
+    .search-clear {
+      position: absolute;
+      right: 0.55rem;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 0;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 1.05rem;
+      line-height: 1;
+      padding: 0.25rem;
+      display: none;
+    }
+    .search-clear:hover { color: #334155; }
+    .search-wrap.has-value .search-clear { display: block; }
+    .config-output {
+      min-height: 220px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: #020617 !important;
+      color: #e2e8f0 !important;
+      caret-color: #e2e8f0;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen p-4 md:p-8">
+
+<div class="max-w-[1760px] mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-xl md:text-2xl font-bold text-slate-800">OpenRouter Models</h1>
+      <p id="counterBadge" class="text-sm text-slate-500 mt-1">Loading model.js...</p>
+      <p class="text-xs text-slate-400 mt-1">Click any row to open/close the original JSON object. Check models to generate Codex profiles.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-3 gap-3 w-full lg:w-auto">
+      <div>
+        <label for="searchBar" class="block text-xs font-medium text-slate-600 mb-1">Search</label>
+        <div id="searchWrap" class="search-wrap">
+          <input id="searchBar" type="text" placeholder="name, id, description..."
+            class="w-full lg:w-80 pl-4 pr-10 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+          <button id="clearSearchBtn" type="button" class="search-clear" title="Clear search" aria-label="Clear search">☒</button>
+        </div>
+      </div>
+      <div>
+        <label for="freeFilter" class="block text-xs font-medium text-slate-600 mb-1">Price</label>
+        <select id="freeFilter" class="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="all">All</option>
+          <option value="free">Free only</option>
+          <option value="paid">Paid only</option>
+        </select>
+      </div>
+      <div>
+        <label for="modalityFilter" class="block text-xs font-medium text-slate-600 mb-1">Modality</label>
+        <select id="modalityFilter" class="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="all">All</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+    <span id="selectedBadge" class="text-sm text-slate-600 mr-2">Selected: 0</span>
+    <button id="selectVisibleBtn" type="button" class="px-3 py-2 rounded-lg bg-white border border-slate-300 text-sm hover:bg-slate-100">Select visible</button>
+    <button id="clearSelectedBtn" type="button" class="px-3 py-2 rounded-lg bg-white border border-slate-300 text-sm hover:bg-slate-100">Clear</button>
+    <label class="flex items-center gap-2 text-sm text-slate-600">
+      Default
+      <select id="defaultProfileSelect" class="px-2 py-2 rounded-lg bg-white border border-slate-300 text-sm disabled:opacity-50" disabled>
+        <option value="">None</option>
+      </select>
+    </label>
+    <button id="generateConfigBtn" type="button" class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700">Generate config.toml</button>
+    <button id="copyConfigBtn" type="button" class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-50" disabled>Copy config</button>
+    <button id="downloadConfigBtn" type="button" class="px-3 py-2 rounded-lg bg-indigo-600 text-white text-sm hover:bg-indigo-700 disabled:opacity-50" disabled>Download Config</button>
+    <span id="copyStatus" class="text-xs text-slate-500"></span>
+  </div>
+
+  <p class="mb-3 text-xs text-slate-500">After generating profiles you can run Codex with: <code>codex --profile profile-name</code></p>
+
+  <div id="configPanel" class="hidden mb-5 rounded-xl border border-slate-200 bg-white overflow-hidden">
+    <div class="px-4 py-3 bg-slate-100 border-b border-slate-200">
+      <div class="font-semibold text-slate-700">Generated <code>./codex/config.toml</code> snippet</div>
+      <div class="text-xs text-slate-500 mt-1">Append/merge this into Codex config, then run: <code>codex --profile profile-name</code></div>
+    </div>
+    <textarea id="configOutput" class="config-output w-full p-4 text-xs outline-none" spellcheck="false"></textarea>
+  </div>
+
+  <div class="overflow-x-auto rounded-xl border border-slate-200">
+    <div class="model-grid bg-slate-100 border-b border-slate-200 text-slate-700 text-sm select-none min-w-[1232px]">
+      <div class="cell header-cell check-cell">✓</div>
+      <button data-sort="name" class="cell header-cell text-left hover:bg-slate-200/60 transition-colors">Name <span class="sort-icon text-xs text-slate-400 ml-1"></span></button>
+      <button data-sort="id" class="cell header-cell text-left hover:bg-slate-200/60 transition-colors"><span><span class="id-header-label">ID <span class="sort-icon text-xs text-slate-400 ml-1"></span></span><span class="profile-header-label">profile-name</span></span></button>
+      <button data-sort="changed" class="cell header-cell text-left hover:bg-slate-200/60 transition-colors">Changed <span class="sort-icon text-xs text-slate-400 ml-1"></span></button>
+      <button data-sort="created" class="cell header-cell text-left hover:bg-slate-200/60 transition-colors">Created <span class="sort-icon text-xs text-slate-400 ml-1"></span></button>
+      <button data-sort="context_length" class="cell header-cell text-left hover:bg-slate-200/60 transition-colors">Context <span class="sort-icon text-xs text-slate-400 ml-1"></span></button>
+      <button data-sort="pricing.prompt" class="cell header-cell text-left hover:bg-slate-200/60 transition-colors">Input $/1M <span class="sort-icon text-xs text-slate-400 ml-1"></span></button>
+      <button data-sort="pricing.completion" class="cell header-cell text-left hover:bg-slate-200/60 transition-colors">Output $/1M <span class="sort-icon text-xs text-slate-400 ml-1"></span></button>
+      <button data-sort="top_provider.max_completion_tokens" class="cell header-cell text-left hover:bg-slate-200/60 transition-colors">Max output <span class="sort-icon text-xs text-slate-400 ml-1"></span></button>
+      <button data-sort="default_effort" class="cell header-cell text-left hover:bg-slate-200/60 transition-colors">Effort <span class="sort-icon text-xs text-slate-400 ml-1"></span></button>
+    </div>
+
+    <ul id="modelList" class="divide-y divide-slate-100 text-sm text-slate-600 min-w-[1232px]">
+      <li class="p-8 text-center text-slate-400">Initializing...</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  let masterModels = [];
+  let visibleModels = [];
+  let currentSortField = 'created';
+  let currentSortDirection = 'desc';
+  const openRows = new Set();
+  const selectedModels = new Set();
+
+  const listEl = document.getElementById('modelList');
+  const searchBar = document.getElementById('searchBar');
+  const searchWrap = document.getElementById('searchWrap');
+  const clearSearchBtn = document.getElementById('clearSearchBtn');
+  const counterBadge = document.getElementById('counterBadge');
+  const freeFilter = document.getElementById('freeFilter');
+  const modalityFilter = document.getElementById('modalityFilter');
+  const sortButtons = document.querySelectorAll('[data-sort]');
+  const selectedBadge = document.getElementById('selectedBadge');
+  const selectVisibleBtn = document.getElementById('selectVisibleBtn');
+  const clearSelectedBtn = document.getElementById('clearSelectedBtn');
+  const generateConfigBtn = document.getElementById('generateConfigBtn');
+  const copyConfigBtn = document.getElementById('copyConfigBtn');
+  const downloadConfigBtn = document.getElementById('downloadConfigBtn');
+  const defaultProfileSelect = document.getElementById('defaultProfileSelect');
+  const copyStatus = document.getElementById('copyStatus');
+  const configPanel = document.getElementById('configPanel');
+  const configOutput = document.getElementById('configOutput');
+  let selectedDefaultId = '';
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+  }
+
+  function safeDomId(id) {
+    return 'model-' + String(id || 'unknown').replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+
+  function profileName(id) {
+    return String(id || 'model')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'model';
+  }
+
+  function profileLabel(id) {
+    return profileName(id);
+  }
+
+  function sortCellClass(field) {
+    return field === currentSortField ? ' sort-active' : '';
+  }
+
+  function tomlString(value) {
+    return JSON.stringify(String(value ?? ''));
+  }
+
+  function getByPath(obj, dottedPath) {
+    return dottedPath.split('.').reduce((acc, key) => acc == null ? undefined : acc[key], obj);
+  }
+
+  function parseNumber(value) {
+    if (value == null || value === '') return null;
+    const n = Number(value);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function getDefaultEffort(model) {
+    return model.default_effort
+      ?? model.defaultEffort
+      ?? model.reasoning?.default_effort
+      ?? model.reasoning?.effort
+      ?? (model.reasoning?.default_enabled === true ? 'on' : model.reasoning?.default_enabled === false ? 'off' : '');
+  }
+
+  function getSortValue(model, field) {
+    if (field === 'default_effort') return getDefaultEffort(model);
+    const value = getByPath(model, field);
+    if (field === 'created' || field === 'changed' || field.includes('context') || field.includes('tokens') || field.startsWith('pricing.')) {
+      return parseNumber(value) ?? -Infinity;
+    }
+    return value ?? '';
+  }
+
+  function formatDate(created) {
+    const n = parseNumber(created);
+    if (!n) return '';
+    const ms = n > 1e12 ? n : n * 1000;
+    return new Date(ms).toISOString().slice(0, 10);
+  }
+
+  function formatInt(value) {
+    const n = parseNumber(value);
+    return n == null ? '' : n.toLocaleString('en-US');
+  }
+
+  function formatPricePerMillion(value) {
+    const n = parseNumber(value);
+    if (n == null) return '';
+    if (n === 0) return 'Free';
+    const perMillion = n * 1_000_000;
+    if (perMillion < 0.0001) return '$' + perMillion.toExponential(2);
+    if (perMillion < 1) return '$' + perMillion.toFixed(4);
+    return '$' + perMillion.toFixed(2);
+  }
+
+  function detailsUrl(model) {
+    const raw = model.links?.details || model.link?.details || '';
+    if (!raw) return '';
+    return raw.startsWith('http') ? raw : 'https://openrouter.ai' + raw;
+  }
+
+  function isFree(model) {
+    const p = parseNumber(model.pricing?.prompt) ?? 0;
+    const c = parseNumber(model.pricing?.completion) ?? 0;
+    const req = parseNumber(model.pricing?.request) ?? 0;
+    const img = parseNumber(model.pricing?.image) ?? 0;
+    return p === 0 && c === 0 && req === 0 && img === 0;
+  }
+
+  async function decodeModels() {
+    if (!window.openRouterModelsGzipBase64) {
+      throw new Error('model.js did not define window.openRouterModelsGzipBase64');
+    }
+
+    const binary = atob(window.openRouterModelsGzipBase64);
+    const bytes = Uint8Array.from(binary, ch => ch.charCodeAt(0));
+
+    if (!('DecompressionStream' in window)) {
+      throw new Error('This browser does not support DecompressionStream. Use a current Chrome/Edge/Safari/Firefox.');
+    }
+
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+    const text = await new Response(stream).text();
+    const parsed = JSON.parse(text);
+    if (!parsed || !Array.isArray(parsed.data)) {
+      throw new Error('Decoded payload is not { data: [...] }');
+    }
+    return parsed.data;
+  }
+
+  function populateModalityFilter(models) {
+    const modalities = [...new Set(models.map(m => m.architecture?.modality).filter(Boolean))].sort();
+    for (const modality of modalities) {
+      const opt = document.createElement('option');
+      opt.value = modality;
+      opt.textContent = modality;
+      modalityFilter.appendChild(opt);
+    }
+  }
+
+  function updateSelectedBadge() {
+    selectedBadge.textContent = 'Selected: ' + selectedModels.size;
+    const selected = selectedModelObjects();
+    if (!selected.length) selectedDefaultId = '';
+    else if (!selectedDefaultId || !selectedModels.has(selectedDefaultId)) selectedDefaultId = selected[0].id;
+
+    defaultProfileSelect.innerHTML = selected.length
+      ? selected.map(model => '<option value="' + escapeHtml(model.id) + '" ' + (model.id === selectedDefaultId ? 'selected' : '') + '>' + escapeHtml(profileName(model.id)) + '</option>').join('')
+      : '<option value="">None</option>';
+    defaultProfileSelect.disabled = !selected.length;
+
+    const hasConfig = !!configOutput.value.trim();
+    copyConfigBtn.disabled = !hasConfig;
+    downloadConfigBtn.disabled = !hasConfig;
+  }
+
+  function applyFiltersAndSort() {
+    searchWrap.classList.toggle('has-value', !!searchBar.value);
+    const q = searchBar.value.trim().toLowerCase();
+    const priceMode = freeFilter.value;
+    const modality = modalityFilter.value;
+
+    visibleModels = masterModels.filter(model => {
+      if (priceMode === 'free' && !isFree(model)) return false;
+      if (priceMode === 'paid' && isFree(model)) return false;
+      if (modality !== 'all' && model.architecture?.modality !== modality) return false;
+      if (!q) return true;
+      const haystack = [model.name, model.id, model.description, model.canonical_slug, model.hugging_face_id]
+        .filter(Boolean).join(' ').toLowerCase();
+      return haystack.includes(q);
+    });
+
+    visibleModels.sort((a, b) => {
+      const av = getSortValue(a, currentSortField);
+      const bv = getSortValue(b, currentSortField);
+      let cmp;
+      if (typeof av === 'number' && typeof bv === 'number') {
+        cmp = av - bv;
+      } else {
+        cmp = String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: 'base' });
+      }
+      return currentSortDirection === 'asc' ? cmp : -cmp;
+    });
+
+    renderList();
+    updateSortIcons();
+    updateSelectedBadge();
+  }
+
+  function renderList() {
+    counterBadge.textContent = visibleModels.length.toLocaleString('en-US') + ' of ' +
+      masterModels.length.toLocaleString('en-US') + ' models' +
+      (window.openRouterModelsGeneratedAt ? ' · generated ' + new Date(window.openRouterModelsGeneratedAt).toLocaleString() : '');
+
+    if (!visibleModels.length) {
+      listEl.innerHTML = '<li class="p-8 text-center text-slate-400">No models found.</li>';
+      return;
+    }
+
+    listEl.innerHTML = visibleModels.map(model => {
+      const domId = safeDomId(model.id);
+      const checked = selectedModels.has(model.id);
+      const open = openRows.has(model.id);
+      const url = detailsUrl(model);
+      const desc = model.description || '';
+      const json = JSON.stringify(model, null, 2);
+      const descHtml = desc
+        ? '<span class="model-description">' + escapeHtml(desc) + '</span>'
+        : '';
+      const profileHtml = '<span class="profile-label">' + escapeHtml(profileLabel(model.id)) + '</span>';
+      const linksHtml = [
+        url ? '<a class="text-blue-300 hover:text-blue-200 underline" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">details endpoint</a>' : '',
+        model.hugging_face_id ? '<span class="text-slate-300">HF: ' + escapeHtml(model.hugging_face_id) + '</span>' : '',
+        model.architecture?.modality ? '<span class="text-slate-300">modality: ' + escapeHtml(model.architecture.modality) + '</span>' : ''
+      ].filter(Boolean).join('');
+
+      return '<li id="' + escapeHtml(domId) + '" data-model-id="' + escapeHtml(model.id) + '" class="bg-white hover:bg-slate-50 transition-colors">' +
+        '<div class="model-grid w-full">' +
+          '<label class="cell check-cell"><input type="checkbox" class="model-checkbox h-4 w-4 rounded border-slate-300" data-model-id="' + escapeHtml(model.id) + '" ' + (checked ? 'checked' : '') + '></label>' +
+          '<button type="button" class="cell row-button' + sortCellClass('name') + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+            '<span><span class="font-semibold text-slate-800">' + escapeHtml(model.name || '') + '</span>' + descHtml + '</span>' +
+          '</button>' +
+          '<button type="button" class="cell row-button font-mono text-xs text-blue-700 break-all' + sortCellClass('id') + '"><span>' + escapeHtml(model.id || '') + profileHtml + '</span></button>' +
+          '<button type="button" class="cell row-button whitespace-nowrap' + sortCellClass('changed') + '">' + escapeHtml(formatDate(model.changed)) + '</button>' +
+          '<button type="button" class="cell row-button whitespace-nowrap' + sortCellClass('created') + '">' + escapeHtml(formatDate(model.created)) + '</button>' +
+          '<button type="button" class="cell row-button whitespace-nowrap' + sortCellClass('context_length') + '">' + escapeHtml(formatInt(model.context_length)) + '</button>' +
+          '<button type="button" class="cell row-button whitespace-nowrap' + sortCellClass('pricing.prompt') + '">' + escapeHtml(formatPricePerMillion(model.pricing?.prompt)) + '</button>' +
+          '<button type="button" class="cell row-button whitespace-nowrap' + sortCellClass('pricing.completion') + '">' + escapeHtml(formatPricePerMillion(model.pricing?.completion)) + '</button>' +
+          '<button type="button" class="cell row-button whitespace-nowrap' + sortCellClass('top_provider.max_completion_tokens') + '">' + escapeHtml(formatInt(model.top_provider?.max_completion_tokens)) + '</button>' +
+          '<button type="button" class="cell row-button whitespace-nowrap' + sortCellClass('default_effort') + '">' + escapeHtml(getDefaultEffort(model)) + '</button>' +
+        '</div>' +
+        '<div class="' + (open ? '' : 'hidden') + ' border-t border-slate-100 bg-slate-900 text-slate-100 p-4">' +
+          '<div class="flex flex-wrap gap-3 mb-3 text-xs">' + linksHtml + '</div>' +
+          '<pre class="details-pre text-xs leading-relaxed">' + escapeHtml(json) + '</pre>' +
+        '</div>' +
+      '</li>';
+    }).join('');
+  }
+
+  function updateSortIcons() {
+    sortButtons.forEach(btn => {
+      const icon = btn.querySelector('.sort-icon');
+      btn.classList.toggle('sort-active', btn.dataset.sort === currentSortField);
+      if (!icon) return;
+      icon.textContent = btn.dataset.sort === currentSortField
+        ? (currentSortDirection === 'asc' ? '▲' : '▼')
+        : '';
+    });
+  }
+
+  function selectedModelObjects() {
+    const byId = new Map(masterModels.map(model => [model.id, model]));
+    return [...selectedModels].map(id => byId.get(id)).filter(Boolean);
+  }
+
+  function uniqueSelectedProfiles(models) {
+    const used = new Map();
+    return models.map(model => {
+      const base = profileName(model.id);
+      const count = used.get(base) || 0;
+      used.set(base, count + 1);
+      return { model, profile: count ? base + '-' + (count + 1) : base };
+    });
+  }
+
+  function generateCodexConfig() {
+    const selected = selectedModelObjects();
+    if (!selected.length) {
+      configOutput.value = '# Select one or more models first.\n';
+      configPanel.classList.remove('hidden');
+      updateSelectedBadge();
+      return;
+    }
+
+    const profiles = uniqueSelectedProfiles(selected);
+    const defaultEntry = profiles.find(entry => entry.model.id === selectedDefaultId) || profiles[0];
+    const orderedProfiles = [defaultEntry, ...profiles.filter(entry => entry !== defaultEntry)];
+    const lines = [];
+    lines.push('# Generated from OpenRouter models list');
+    lines.push('# Save/merge into ./codex/config.toml or ~/.codex/config.toml');
+    lines.push('# Default model below is copied from [profiles.' + defaultEntry.profile + ']');
+    lines.push('');
+    lines.push('model_provider = "openrouter"');
+    lines.push('model = ' + tomlString(defaultEntry.model.id));
+    lines.push('');
+    lines.push('[model_providers.openrouter]');
+    lines.push('name = "OpenRouter"');
+    lines.push('base_url = "https://openrouter.ai/api/v1"');
+    lines.push('env_key = "OPENROUTER_API_KEY"');
+    lines.push('wire_api = "chat"');
+    lines.push('');
+
+    for (const { model, profile } of orderedProfiles) {
+      lines.push('[profiles.' + profile + ']');
+      lines.push('model_provider = "openrouter"');
+      lines.push('model = ' + tomlString(model.id));
+      if (model.id === defaultEntry.model.id) lines.push('# default_profile = true');
+      lines.push('# name = ' + tomlString(model.name || model.id));
+      if (model.context_length) lines.push('# context_length = ' + String(model.context_length));
+      if (model.pricing?.prompt != null) lines.push('# input_usd_per_1m_tokens = ' + tomlString(formatPricePerMillion(model.pricing.prompt)));
+      if (model.pricing?.completion != null) lines.push('# output_usd_per_1m_tokens = ' + tomlString(formatPricePerMillion(model.pricing.completion)));
+      lines.push('');
+    }
+
+    configOutput.value = lines.join('\n');
+    configPanel.classList.remove('hidden');
+    updateSelectedBadge();
+  }
+
+  sortButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const field = btn.dataset.sort;
+      if (field === currentSortField) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSortField = field;
+        currentSortDirection = field === 'name' || field === 'id' ? 'asc' : 'desc';
+      }
+      applyFiltersAndSort();
+    });
+  });
+
+  listEl.addEventListener('click', event => {
+    const checkbox = event.target.closest('.model-checkbox');
+    if (checkbox) {
+      const id = checkbox.dataset.modelId;
+      if (checkbox.checked) selectedModels.add(id);
+      else selectedModels.delete(id);
+      updateSelectedBadge();
+      return;
+    }
+
+    const li = event.target.closest('li[data-model-id]');
+    if (!li) return;
+    if (event.target.closest('a')) return;
+    const id = li.dataset.modelId;
+    if (openRows.has(id)) openRows.delete(id);
+    else openRows.add(id);
+    renderList();
+    updateSelectedBadge();
+  });
+
+  selectVisibleBtn.addEventListener('click', () => {
+    visibleModels.forEach(model => selectedModels.add(model.id));
+    renderList();
+    updateSelectedBadge();
+  });
+
+  clearSelectedBtn.addEventListener('click', () => {
+    selectedModels.clear();
+    selectedDefaultId = '';
+    configOutput.value = '';
+    configPanel.classList.add('hidden');
+    copyStatus.textContent = '';
+    renderList();
+    updateSelectedBadge();
+  });
+
+  generateConfigBtn.addEventListener('click', generateCodexConfig);
+
+  defaultProfileSelect.addEventListener('change', () => {
+    selectedDefaultId = defaultProfileSelect.value;
+    if (configOutput.value.trim()) generateCodexConfig();
+  });
+
+  downloadConfigBtn.addEventListener('click', () => {
+    const blob = new Blob([configOutput.value], { type: 'text/toml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'config.toml';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    copyStatus.textContent = 'Downloaded';
+    setTimeout(() => copyStatus.textContent = '', 1500);
+  });
+
+  copyConfigBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(configOutput.value);
+      copyStatus.textContent = 'Copied';
+      setTimeout(() => copyStatus.textContent = '', 1500);
+    } catch (err) {
+      configOutput.focus();
+      configOutput.select();
+      copyStatus.textContent = 'Select text and copy manually';
+    }
+  });
+
+  clearSearchBtn.addEventListener('click', () => {
+    searchBar.value = '';
+    searchBar.focus();
+    applyFiltersAndSort();
+  });
+
+  searchBar.addEventListener('input', applyFiltersAndSort);
+  freeFilter.addEventListener('change', applyFiltersAndSort);
+  modalityFilter.addEventListener('change', applyFiltersAndSort);
+
+  decodeModels()
+    .then(models => {
+      masterModels = models;
+      populateModalityFilter(masterModels);
+      applyFiltersAndSort();
+    })
+    .catch(err => {
+      console.error(err);
+      listEl.innerHTML = '<li class="p-8 text-center text-red-600">Failed to load model.js: ' + escapeHtml(err.message) + '</li>';
+      counterBadge.textContent = 'Load error';
+    });
+</script>
+</body>
+</html>
