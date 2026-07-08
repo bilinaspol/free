@@ -21,3 +21,8 @@ backups/
 *.bak
 *.backup
 .DS_Store
+
+# Old snapshots/backups
+data*.json
+*.bak-*
+*.bad-shape-*
