@@ -1,7 +1,8 @@
-# Private generator/update scripts
-generate-openrouter-models-page.js
-compare-update.js
-compare-updaate.js
+# Private JavaScript source; only the generated public payload may be tracked
+*.js
+!model.js
+
+# Private updater script
 update-openrouter-models.sh
 
 # Private source DB / API snapshots
